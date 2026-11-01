@@ -23,7 +23,7 @@ jobs:
 
     - name: Install dependencies and Build
       env:
-        VITE_SERVER_URL: ${{ secrets.SSH_HOST }}
+        VITE_SERVER_URL: ${{ secrets.VITE_SERVER_URL }}
         VITE_BASE_PATH: ${{ secrets.VITE_BASE_PATH }}
       run: |
         npm ci
