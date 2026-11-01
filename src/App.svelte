@@ -2,7 +2,8 @@
   import { onMount, onDestroy } from "svelte";
   import type {NotificationPayload} from "./db/schema";
 
-  const SERVER_URL = "http://localhost:3000";
+  const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
+  
   const API_BASE = `${SERVER_URL}/api/pushes`; 
 
   let notifications: NotificationPayload[] = $state([]);
