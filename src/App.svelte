@@ -171,6 +171,9 @@
 </main>
 
 <style>
+  .logs {
+    padding: 10px;
+  }
   .card {
     background: white;
     padding: 15px;
