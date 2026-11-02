@@ -57,6 +57,8 @@
   function handleKeyDown(event: KeyboardEvent) {
     if (notifications.length === 0) return;
 
+    const PAGE_STEP = 5;
+
     if (event.key === "ArrowDown") {
       event.preventDefault();
       activeIndex =
@@ -66,6 +68,28 @@
       event.preventDefault();
       activeIndex =
         activeIndex > 0 ? activeIndex - 1 : notifications.length - 1;
+      focusActiveCard();
+    } else if (event.key === "PageDown") {
+      event.preventDefault();
+      activeIndex = Math.min(activeIndex + PAGE_STEP, notifications.length - 1);
+      if (
+        activeIndex === notifications.length - 1 &&
+        activeIndex === $state.snapshot(activeIndex)
+      ) {
+        activeIndex = 0;
+      }
+      focusActiveCard();
+    } else if (event.key === "PageUp") {
+      event.preventDefault();
+      activeIndex = Math.max(activeIndex - PAGE_STEP, 0);
+      focusActiveCard();
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      activeIndex = 0;
+      focusActiveCard();
+    } else if (event.key === "End") {
+      event.preventDefault();
+      activeIndex = notifications.length - 1;
       focusActiveCard();
     } else if (event.key === "Delete" || event.key === "Backspace") {
       if (activeIndex >= 0 && activeIndex < notifications.length) {
@@ -92,13 +116,16 @@
   <div class="logs" bind:this={logsContainer}>
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_tabindex -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    {#each notifications as item, index}  
+    {#each notifications as item, index}
       <div
         class="card {item.isOngoing ? 'ongoing' : ''} {index === activeIndex
           ? 'active'
           : ''}"
         tabindex="0"
-        onclick={() => { activeIndex = index; focusActiveCard(); }}
+        onclick={() => {
+          activeIndex = index;
+          focusActiveCard();
+        }}
       >
         <div class="header-row">
           <span class="app-name">{item.appName || "Android App"}</span>
