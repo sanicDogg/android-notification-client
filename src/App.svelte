@@ -1,23 +1,42 @@
 <script lang="ts">
   import { onMount, onDestroy, tick } from "svelte";
+  import { SvelteMap } from "svelte/reactivity";
   import type { NotificationPayload } from "./db/schema";
 
   const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
   const BASE_PATH = import.meta.env.VITE_BASE_PATH || "/abc/";
   const API_BASE = `${SERVER_URL}/${BASE_PATH}/api/pushes`;
 
-  let notifications: NotificationPayload[] = $state([]);
-  let evtSource;
   const MAX_NOTIFICATIONS_COUNT = 50;
 
-  let activeIndex = $state(-1);
+  let evtSource;
+
+  let notificationsMap = new SvelteMap<string, NotificationPayload>();
+
+  let activeId = $state<string | null>(null);
   let logsContainer: HTMLDivElement | null = $state(null);
+
+  let sortedNotifications = $derived.by(() => {
+    const list = Array.from(notificationsMap.values());
+    return list.sort((a, b) => b.postTime - a.postTime);
+  });
+
+  // Get current index for Arrow navigation
+  let activeIndex = $derived(
+    activeId
+      ? sortedNotifications.findIndex((item) => item.id === activeId)
+      : -1,
+  );
 
   onMount(async () => {
     try {
       const res = await fetch(`${API_BASE}`);
       if (res.ok) {
-        notifications = await res.json();
+        const data: NotificationPayload[] = await res.json();
+        
+        notificationsMap.clear();
+        // Exclude duplicated items
+        data.forEach((item) => notificationsMap.set(item.id, item));
       }
     } catch (err) {
       console.error("Error loading notifications:", err);
@@ -25,14 +44,16 @@
 
     evtSource = new EventSource(`${API_BASE}/events`);
     evtSource.onmessage = (event) => {
-      const newNotify = JSON.parse(event.data);
-      notifications = [newNotify, ...notifications].slice(
-        0,
-        MAX_NOTIFICATIONS_COUNT,
-      );
+      const newNotify: NotificationPayload = JSON.parse(event.data);
 
-      if (activeIndex >= 0) {
-        activeIndex++;
+      // Instantly UI update
+      notificationsMap.set(newNotify.id, newNotify);
+
+      if (notificationsMap.size > MAX_NOTIFICATIONS_COUNT) {
+        const oldest = sortedNotifications[sortedNotifications.length - 1];
+        if (oldest && oldest.id !== newNotify.id) {
+          notificationsMap.delete(oldest.id);
+        }
       }
     };
 
@@ -47,7 +68,7 @@
 
   async function focusActiveCard() {
     await tick();
-    if (!logsContainer) return;
+    if (!logsContainer || activeIndex === -1) return;
     const cards = logsContainer.querySelectorAll<HTMLDivElement>(".card");
     if (cards[activeIndex]) {
       cards[activeIndex].focus();
@@ -55,53 +76,58 @@
   }
 
   function handleKeyDown(event: KeyboardEvent) {
-    if (notifications.length === 0) return;
+    if (sortedNotifications.length === 0) return;
 
     const PAGE_STEP = 5;
 
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      activeIndex =
-        activeIndex < notifications.length - 1 ? activeIndex + 1 : 0;
+      const nextIdx =
+        activeIndex < sortedNotifications.length - 1 ? activeIndex + 1 : 0;
+      activeId = sortedNotifications[nextIdx].id;
       focusActiveCard();
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
-      activeIndex =
-        activeIndex > 0 ? activeIndex - 1 : notifications.length - 1;
+      const prevIdx =
+        activeIndex > 0 ? activeIndex - 1 : sortedNotifications.length - 1;
+      activeId = sortedNotifications[prevIdx].id;
       focusActiveCard();
     } else if (event.key === "PageDown") {
       event.preventDefault();
-      activeIndex = Math.min(activeIndex + PAGE_STEP, notifications.length - 1);
-      if (
-        activeIndex === notifications.length - 1 &&
-        activeIndex === $state.snapshot(activeIndex)
-      ) {
-        activeIndex = 0;
-      }
+      const nextIdx = Math.min(
+        activeIndex + PAGE_STEP,
+        sortedNotifications.length - 1,
+      );
+      activeId = sortedNotifications[nextIdx].id;
       focusActiveCard();
     } else if (event.key === "PageUp") {
       event.preventDefault();
-      activeIndex = Math.max(activeIndex - PAGE_STEP, 0);
+      const prevIdx = Math.max(activeIndex - PAGE_STEP, 0);
+      activeId = sortedNotifications[prevIdx].id;
       focusActiveCard();
     } else if (event.key === "Home") {
       event.preventDefault();
-      activeIndex = 0;
+      activeId = sortedNotifications[0].id;
       focusActiveCard();
     } else if (event.key === "End") {
       event.preventDefault();
-      activeIndex = notifications.length - 1;
+      activeId = sortedNotifications[sortedNotifications.length - 1].id;
       focusActiveCard();
     } else if (event.key === "Delete" || event.key === "Backspace") {
-      if (activeIndex >= 0 && activeIndex < notifications.length) {
+      if (activeId && notificationsMap.has(activeId)) {
         event.preventDefault();
 
-        notifications = notifications.filter((_, i) => i !== activeIndex);
-
-        if (notifications.length === 0) {
-          activeIndex = -1;
-        } else if (activeIndex >= notifications.length) {
-          activeIndex = notifications.length - 1;
+        let nextActiveId: string | null = null;
+        if (sortedNotifications.length > 1) {
+          if (activeIndex < sortedNotifications.length - 1) {
+            nextActiveId = sortedNotifications[activeIndex + 1].id;
+          } else {
+            nextActiveId = sortedNotifications[activeIndex - 1].id;
+          }
         }
+
+        notificationsMap.delete(activeId);
+        activeId = nextActiveId;
 
         focusActiveCard();
       }
@@ -116,14 +142,14 @@
   <div class="logs" bind:this={logsContainer}>
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_tabindex -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    {#each notifications as item, index}
+    {#each sortedNotifications as item (item.id)}
       <div
-        class="card {item.isOngoing ? 'ongoing' : ''} {index === activeIndex
+        class="card {item.isOngoing ? 'ongoing' : ''} {item.id === activeId
           ? 'active'
           : ''}"
         tabindex="0"
         onclick={() => {
-          activeIndex = index;
+          activeId = item.id;
           focusActiveCard();
         }}
       >
