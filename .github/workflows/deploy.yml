@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  TARGET_DIR: "/var/www/android-notification-server/public"
+  TARGET_DIR: "/var/www/android-notification/public"
 
 jobs:
   build-and-deploy:
