@@ -6,8 +6,18 @@
   import NotificationCard from "./components/NotificationCard.svelte";
 
   import { syncMapFromApi } from "./lib/api";
+  import type {
+    ClientConnectedEvent,
+    ClientDisconnectedEvent,
+    NotificationDeletedEvent,
+    SseMessage,
+  } from "./lib/api";
 
-  import type { ClientInfo, ClientsPayload, NotificationPayload } from "./db/schema";
+  import type {
+    ClientInfo,
+    ClientsPayload,
+    NotificationPayload,
+  } from "./db/schema";
 
   const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
   const BASE_PATH = import.meta.env.VITE_BASE_PATH || "/abc/";
@@ -57,34 +67,7 @@
     evtSource = new EventSource(`${API_BASE}/events`);
     evtSource.onmessage = (event) => {
       const msg = JSON.parse(event.data);
-      if (msg.type === "DELETED") {
-        if (notificationsMap.has(msg.id)) {
-          if (activeId === msg.id) {
-            let nextActiveId: string | null = null;
-            if (sortedNotifications.length > 1) {
-              if (activeIndex < sortedNotifications.length - 1) {
-                nextActiveId = sortedNotifications[activeIndex + 1].id;
-              } else {
-                nextActiveId = sortedNotifications[activeIndex - 1].id;
-              }
-            }
-            activeId = nextActiveId;
-            focusActiveCard();
-          }
-          notificationsMap.delete(msg.id);
-        }
-        return;
-      }
-
-      const newNotify: NotificationPayload = msg;
-      notificationsMap.set(newNotify.id, newNotify);
-
-      if (notificationsMap.size > MAX_NOTIFICATIONS_COUNT) {
-        const oldest = sortedNotifications[sortedNotifications.length - 1];
-        if (oldest && oldest.id !== newNotify.id) {
-          notificationsMap.delete(oldest.id);
-        }
-      }
+      handleSseMessage(msg, notificationsMap, clientsMap);
     };
 
     evtSource.onerror = (err) => {
@@ -174,6 +157,60 @@
         } catch (err) {
           console.error("Error sending delete request:", err);
         }
+      }
+    }
+  }
+
+  function limitNotifications(
+    notifications: SvelteMap<string, NotificationPayload>,
+    newNotifyId: string,
+  ) {
+    if (notifications.size <= MAX_NOTIFICATIONS_COUNT) return;
+
+    const oldest = sortedNotifications[sortedNotifications.length - 1];
+    if (oldest && oldest.id !== newNotifyId) {
+      notifications.delete(oldest.id);
+    }
+  }
+
+  function handleSseMessage(
+    msg: SseMessage,
+    notifications: SvelteMap<string, NotificationPayload>,
+    clients: SvelteMap<string, ClientInfo>,
+  ) {
+    if (!msg || typeof msg !== "object") return;
+
+    if (!("type" in msg)) {
+      const newNotify = msg as NotificationPayload;
+
+      notifications.set(newNotify.id, newNotify);
+      limitNotifications(notifications, newNotify.id);
+      return;
+    }
+
+    if ("type" in msg) {
+      if (msg.type === "CLIENT_CONNECTED") {
+        const connectMsg = msg as ClientConnectedEvent;
+        clients.set(connectMsg.client.id, connectMsg.client);
+        return;
+      }
+
+      if (msg.type === "CLIENT_DISCONNECTED") {
+        const disconnectMsg = msg as ClientDisconnectedEvent;
+        clients.delete(disconnectMsg.clientId);
+        return;
+      }
+
+      if (msg.type === "DELETED") {
+        const deleteMsg = msg as NotificationDeletedEvent;
+        if (notifications.has(deleteMsg.id)) {
+          // handleNotificationDeletion(deleteMsg.id);
+        }
+        return;
+      }
+
+      if (msg.type === "WELCOME") {
+        return;
       }
     }
   }

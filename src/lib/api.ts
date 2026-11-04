@@ -1,4 +1,5 @@
 import { SvelteMap } from "svelte/reactivity";
+import type { ClientInfo, NotificationPayload } from "../db/schema";
 
 /**
  * Universal helper for SvelteMap sync with API data
@@ -33,3 +34,29 @@ export async function syncMapFromApi<T, R, K extends keyof T = 'id'>(
     console.error(`Error loading ${errorLabel}:`, err);
   }
 }
+export interface ClientConnectedEvent {
+  type: "CLIENT_CONNECTED";
+  client: ClientInfo;
+}
+
+export interface ClientDisconnectedEvent {
+  type: "CLIENT_DISCONNECTED";
+  clientId: string;
+}
+
+export interface NotificationDeletedEvent {
+  type: "DELETED";
+  id: string;
+}
+
+export interface WelcomeEvent {
+  type: "WELCOME";
+  YourId: string;
+}
+
+export type SseMessage = 
+  | ClientConnectedEvent 
+  | ClientDisconnectedEvent 
+  | NotificationDeletedEvent 
+  | WelcomeEvent
+  | NotificationPayload;
