@@ -1,21 +1,27 @@
 <script lang="ts">
   import { onMount, onDestroy, tick } from "svelte";
   import { SvelteMap } from "svelte/reactivity";
-  import type { NotificationPayload } from "./db/schema";
 
   import ControlPanel from "./components/ControlPanel.svelte";
   import NotificationCard from "./components/NotificationCard.svelte";
 
+  import { syncMapFromApi } from "./lib/api";
+
+  import type { ClientInfo, ClientsPayload, NotificationPayload } from "./db/schema";
+
   const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
   const BASE_PATH = import.meta.env.VITE_BASE_PATH || "/abc/";
-  
-  const relativePath = `${BASE_PATH}/api/pushes`.replace(/\/+/g, '/');
+  const relativePath = `${BASE_PATH}/api/pushes`.replace(/\/+/g, "/");
   const API_BASE = new URL(relativePath, SERVER_URL).toString();
-  
+
   const MAX_NOTIFICATIONS_COUNT = 50;
 
   let evtSource: EventSource | null = null;
+
   let notificationsMap = new SvelteMap<string, NotificationPayload>();
+  const clientsMap = new SvelteMap<string, ClientInfo>();
+
+  let userCount = $derived(clientsMap.size);
 
   let activeId = $state<string | null>(null);
   let logsContainer: HTMLDivElement | null = $state(null);
@@ -32,16 +38,21 @@
   );
 
   onMount(async () => {
-    try {
-      const res = await fetch(`${API_BASE}`);
-      if (res.ok) {
-        const data: NotificationPayload[] = await res.json();
-        notificationsMap.clear();
-        data.forEach((item) => notificationsMap.set(item.id, item));
-      }
-    } catch (err) {
-      console.error("Error loading notifications:", err);
-    }
+    await Promise.all([
+      syncMapFromApi(
+        API_BASE,
+        notificationsMap,
+        (data: NotificationPayload[]) => data,
+        "notifications",
+      ),
+
+      syncMapFromApi(
+        `${API_BASE}/connections`,
+        clientsMap,
+        (data: ClientsPayload) => data.clients,
+        "active connections",
+      ),
+    ]);
 
     evtSource = new EventSource(`${API_BASE}/events`);
     evtSource.onmessage = (event) => {
@@ -167,7 +178,6 @@
     }
   }
 
-  let userCount = $state(4);
   let batteryLevel = $state(73);
   let isWifiConnected = $state(false);
   let wifiName = $state("Airport_Free_Wi-Fi");
@@ -181,7 +191,7 @@
 <svelte:window onkeydown={handleKeyDown} />
 
 <main>
-  <ControlPanel 
+  <ControlPanel
     {userCount}
     {batteryLevel}
     {isWifiConnected}

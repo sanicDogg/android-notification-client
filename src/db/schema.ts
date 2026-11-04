@@ -13,3 +13,15 @@ export interface NotificationPayload {
   type: string;
   isOngoing: boolean;
 }
+
+export interface ClientInfo {
+  id: string;
+  ip: string;
+  userAgent: string;
+  connectedAt: string;
+}
+
+export interface ClientsPayload {
+  total: number;
+  clients: ClientInfo[];
+}
