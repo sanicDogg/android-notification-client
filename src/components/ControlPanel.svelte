@@ -31,6 +31,7 @@
   }: Props = $props();
 
   let isUsersDropdownOpen = $state(false);
+  let isCopied = $state(false);
 
   function toggleUsersDropdown(event: MouseEvent) {
     event.stopPropagation();
@@ -39,6 +40,23 @@
 
   function closeDropdown() {
     isUsersDropdownOpen = false;
+  }
+
+  function copyToJson(event: MouseEvent) {
+    event.stopPropagation();
+    if (clients.length === 0) return;
+
+    const jsonString = JSON.stringify(clients, null, 2);
+
+    navigator.clipboard
+      .writeText(jsonString)
+      .then(() => {
+        isCopied = true;
+        setTimeout(() => (isCopied = false), 2000);
+      })
+      .catch((err) => {
+        console.error("Failed to copy JSON:", err);
+      });
   }
 </script>
 
@@ -79,6 +97,43 @@
         >
           <div class="dropdown-header">
             <h3>Connected Clients ({userCount})</h3>
+            {#if clients.length > 0}
+              <button
+                class="copy-json-btn {isCopied ? 'copied' : ''}"
+                title={isCopied ? "Copied!" : "Copy as JSON"}
+                onclick={copyToJson}
+              >
+                {#if isCopied}
+                  <!-- Success checkmark icon -->
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                {:else}
+                  <!-- Copy icon -->
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"
+                    ></rect>
+                    <path
+                      d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                    ></path>
+                  </svg>
+                {/if}
+              </button>
+            {/if}
           </div>
           {#if clients.length === 0}
             <div class="dropdown-empty">No active connections</div>
@@ -275,7 +330,7 @@
     padding-left: 1px;
   }
 
-  /* Clients, dropdown */
+  /* Clients */
   .status-item.users.clickable {
     position: relative;
     padding: 4px 8px;
@@ -294,39 +349,7 @@
   .status-item.users.clickable.active .users-icon-svg {
     color: #007acc;
   }
-  .users-dropdown {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 0;
-    width: 290px;
-    max-height: 350px;
-    background: white;
-    border: 1px solid #e5e5ea;
-    border-radius: 8px;
-    box-shadow:
-      0 4px 12px rgba(0, 0, 0, 0.1),
-      0 1px 3px rgba(0, 0, 0, 0.05);
-    z-index: 100;
-    overflow-y: auto;
-    color: #444;
-    text-align: left;
-    padding: 12px;
-  }
-  .dropdown-header h3 {
-    margin: 0 0 10px 0;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #8e8e93;
-  }
-  .dropdown-empty {
-    color: #aeaeab;
-    font-size: 0.8rem;
-    padding: 16px 0;
-    text-align: center;
-  }
-  .clients-list {
+   .clients-list {
     list-style: none;
     padding: 0;
     margin: 0;
@@ -364,6 +387,74 @@
     font-size: 10px;
     font-family: monospace;
     margin-top: 3px;
+  }
+
+   /* Dropdown */
+  .users-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 290px;
+    max-height: 350px;
+    background: white;
+    border: 1px solid #e5e5ea;
+    border-radius: 8px;
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.1),
+      0 1px 3px rgba(0, 0, 0, 0.05);
+    z-index: 100;
+    overflow-y: auto;
+    color: #444;
+    text-align: left;
+    padding: 12px;
+  }
+  .dropdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .dropdown-header h3 {
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #8e8e93;
+  }
+  .dropdown-empty {
+    color: #aeaeab;
+    font-size: 0.8rem;
+    padding: 16px 0;
+    text-align: center;
+  }
+
+  /* Copy JSON button */
+  .copy-json-btn {
+    background: transparent;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: #8e8e93;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+  .copy-json-btn:hover {
+    background: #f2f2f7;
+    color: #007acc;
+  }
+  .copy-json-btn.copied {
+    color: #4caf50;
+    background: #e8f5e9;
+  }
+  .copy-json-btn svg {
+    width: 14px;
+    height: 14px;
   }
 
   /* Notifications */
