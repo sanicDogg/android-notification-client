@@ -8,20 +8,20 @@ import type { ClientInfo, NotificationPayload } from "../db/schema";
  * @param extractList — Get list from response function
  * @param errorLabel — For logging
  */
-export async function syncMapFromApi<T, R, K extends keyof T = 'id'>(
+export async function syncMapFromApi<T, R, K extends keyof T = keyof T>(
   url: string,
   map: SvelteMap<T[K], T>,
   extractList: (data: R) => T[],
   errorLabel = "API",
-  key: K = 'id' as K
+  key: K = 'id' as unknown as K
 ) {
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    
+
     const data: R = await res.json();
     const list = extractList(data);
-    
+
     map.clear();
     if (Array.isArray(list)) {
       for (const item of list) {
