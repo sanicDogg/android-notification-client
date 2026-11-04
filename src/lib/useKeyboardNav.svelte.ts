@@ -1,7 +1,7 @@
 // src/lib/useKeyboardNav.svelte.ts
 
 import { tick } from 'svelte';
-import type { NotificationPayload } from './db/schema';
+import type { NotificationPayload } from '../db/schema';
 
 export function createKeyboardNav(
   getNotifications: () => NotificationPayload[],
