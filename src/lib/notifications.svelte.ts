@@ -41,6 +41,19 @@ export class NotificationService {
     this.#apiBase = new URL(relativePath, serverUrl).toString();
   }
 
+  async #syncClients() {
+    try {
+      await syncMapFromApi(
+        `${this.#apiBase}/connections`,
+        this.clientsMap,
+        (data: ClientsPayload) => data.clients,
+        'active connections',
+      );
+    } catch (err) {
+      console.error('Failed to sync clients:', err);
+    }
+  }
+
   async init() {
     await Promise.all([
       syncMapFromApi(
@@ -49,12 +62,7 @@ export class NotificationService {
         (data: NotificationPayload[]) => data,
         'notifications',
       ),
-      syncMapFromApi(
-        `${this.#apiBase}/connections`,
-        this.clientsMap,
-        (data: ClientsPayload) => data.clients,
-        'active connections',
-      ),
+      this.#syncClients(),
     ]);
 
     this.#evtSource = new EventSource(`${this.#apiBase}/events`);
@@ -121,6 +129,7 @@ export class NotificationService {
         break;
       }
       case 'WELCOME':
+        this.#syncClients();
         break;
       case 'DELETED':
         // handleNotificationDeletion(msg.id);
