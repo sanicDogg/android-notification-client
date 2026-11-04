@@ -2,7 +2,11 @@
 
 import { SvelteMap } from 'svelte/reactivity';
 import { syncMapFromApi } from './api';
-import type { ClientConnectedEvent, ClientDisconnectedEvent, SseMessage } from './api';
+import type {
+  ClientConnectedEvent,
+  ClientDisconnectedEvent,
+  SseMessage,
+} from './api';
 import type {
   ClientInfo,
   ClientsPayload,
@@ -106,14 +110,16 @@ export class NotificationService {
 
     // System messages processing
     switch (msg.type) {
-      case 'CLIENT_CONNECTED':
-        const connectedEvent = msg as ClientConnectedEvent;
-        this.clientsMap.set(connectedEvent.client.id, connectedEvent.client);
+      case 'CLIENT_CONNECTED': {
+        const event = msg as ClientConnectedEvent;
+        this.clientsMap.set(event.client.id, event.client);
         break;
-      case 'CLIENT_DISCONNECTED':
-        const disconnectedEvent = msg as ClientDisconnectedEvent;
-        this.clientsMap.delete(disconnectedEvent.clientId);
+      }
+      case 'CLIENT_DISCONNECTED': {
+        const event = msg as ClientDisconnectedEvent;
+        this.clientsMap.delete(event.clientId);
         break;
+      }
       case 'WELCOME':
         break;
       case 'DELETED':
