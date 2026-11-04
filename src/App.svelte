@@ -2,15 +2,15 @@
   import { onMount, onDestroy } from "svelte";
   import ControlPanel from "./components/ControlPanel.svelte";
   import NotificationCard from "./components/NotificationCard.svelte";
-  
+
   import { NotificationService } from "./lib/notifications.svelte";
   import { createKeyboardNav } from "./lib/useKeyboardNav.svelte";
   import { deviceState } from "./lib/deviceState.svelte";
 
   const service = new NotificationService();
   const nav = createKeyboardNav(
-    () => service.sortedNotifications, 
-    (id) => service.deleteNotification(id)
+    () => service.sortedNotifications,
+    (id) => service.deleteNotification(id),
   );
 
   onMount(() => {
@@ -27,6 +27,7 @@
 <main>
   <ControlPanel
     userCount={service.userCount}
+    clients={Array.from(service.clientsMap.values())}
     notificationCount={service.count}
     batteryLevel={deviceState.batteryLevel}
     isWifiConnected={deviceState.isWifiConnected}

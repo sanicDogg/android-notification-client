@@ -1,6 +1,8 @@
 <script lang="ts">
+  import type { ClientInfo } from "../db/schema";
   interface Props {
     userCount?: number;
+    clients?: ClientInfo[];
     batteryLevel?: number;
     isWifiConnected?: boolean;
     wifiName?: string;
@@ -15,6 +17,7 @@
 
   let {
     userCount = 0,
+    clients = [],
     batteryLevel = 100,
     isWifiConnected = true,
     wifiName = "Home_Network",
@@ -26,12 +29,32 @@
     notificationCount = 0,
     isMediaPlaying = false,
   }: Props = $props();
+
+  let isUsersDropdownOpen = $state(false);
+
+  function toggleUsersDropdown(event: MouseEvent) {
+    event.stopPropagation();
+    isUsersDropdownOpen = !isUsersDropdownOpen;
+  }
+
+  function closeDropdown() {
+    isUsersDropdownOpen = false;
+  }
 </script>
+
+<svelte:window onclick={closeDropdown} />
 
 <header class="control-panel">
   <!-- LEFT SIDE: users, notifications, media -->
   <div class="panel-section left">
-    <div class="status-item users" title="Active users">
+    <div
+      class="status-item users clickable {isUsersDropdownOpen ? 'active' : ''}"
+      title="Active users"
+      role="button"
+      tabindex="0"
+      onclick={toggleUsersDropdown}
+      onkeydown={(e) => e.key === "Enter" && toggleUsersDropdown(e as any)}
+    >
       <!-- users svg -->
       <svg
         class="users-icon-svg"
@@ -48,27 +71,55 @@
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
       <span class="value">{userCount}</span>
-    </div>
-
-    {#if notificationCount > 0}
-      {#if notificationCount > 0}
-        <div class="status-item notifications" title="Notifications">
-          <!-- bell svg -->
-          <svg
-            class="bell-icon-svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
-            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
-          </svg>
-          <span class="badge">{notificationCount}</span>
+      {#if isUsersDropdownOpen}
+        <div
+          class="users-dropdown"
+          onclick={(e) => e.stopPropagation()}
+          role="presentation"
+        >
+          <div class="dropdown-header">
+            <h3>Connected Clients ({userCount})</h3>
+          </div>
+          {#if clients.length === 0}
+            <div class="dropdown-empty">No active connections</div>
+          {:else}
+            <ul class="clients-list">
+              {#each clients as client (client.id)}
+                <li class="client-item">
+                  <div class="client-main">
+                    <span class="client-ip">{client.ip}</span>
+                    <span class="client-date" title="Connected at">
+                      {new Date(client.connectedAt).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  <div class="client-ua" title={client.userAgent}>
+                    {client.userAgent}
+                  </div>
+                  <div class="client-id">ID: {client.id}</div>
+                </li>
+              {/each}
+            </ul>
+          {/if}
         </div>
       {/if}
+    </div>
+    {#if notificationCount > 0}
+      <div class="status-item notifications" title="Notifications">
+        <!-- bell svg -->
+        <svg
+          class="bell-icon-svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
+          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
+        </svg>
+        <span class="badge">{notificationCount}</span>
+      </div>
     {/if}
 
     {#if isMediaPlaying}
@@ -222,6 +273,97 @@
     color: #222;
     font-weight: 600;
     padding-left: 1px;
+  }
+
+  /* Clients, dropdown */
+  .status-item.users.clickable {
+    position: relative;
+    padding: 4px 8px;
+    margin: -4px -8px;
+    border-radius: 6px;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+  .status-item.users.clickable:hover,
+  .status-item.users.clickable.active {
+    background: #f5f5f7;
+    color: #007acc;
+  }
+  .status-item.users.clickable:hover .users-icon-svg,
+  .status-item.users.clickable.active .users-icon-svg {
+    color: #007acc;
+  }
+  .users-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 290px;
+    max-height: 350px;
+    background: white;
+    border: 1px solid #e5e5ea;
+    border-radius: 8px;
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.1),
+      0 1px 3px rgba(0, 0, 0, 0.05);
+    z-index: 100;
+    overflow-y: auto;
+    color: #444;
+    text-align: left;
+    padding: 12px;
+  }
+  .dropdown-header h3 {
+    margin: 0 0 10px 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #8e8e93;
+  }
+  .dropdown-empty {
+    color: #aeaeab;
+    font-size: 0.8rem;
+    padding: 16px 0;
+    text-align: center;
+  }
+  .clients-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .client-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #f2f2f7;
+    font-size: 12px;
+  }
+  .client-item:last-child {
+    border-bottom: none;
+  }
+  .client-main {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 3px;
+  }
+  .client-ip {
+    font-weight: 600;
+    color: #007acc;
+  }
+  .client-date {
+    color: #8e8e93;
+    font-size: 11px;
+  }
+  .client-ua {
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11px;
+  }
+  .client-id {
+    color: #aeaeab;
+    font-size: 10px;
+    font-family: monospace;
+    margin-top: 3px;
   }
 
   /* Notifications */
