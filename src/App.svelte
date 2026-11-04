@@ -3,14 +3,16 @@
   import { SvelteMap } from "svelte/reactivity";
   import type { NotificationPayload } from "./db/schema";
 
+  import ControlPanel from "./components/ControlPanel.svelte";
+  import NotificationCard from "./components/NotificationCard.svelte";
+
   const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
   const BASE_PATH = import.meta.env.VITE_BASE_PATH || "/abc/";
   const API_BASE = `${SERVER_URL}/${BASE_PATH}/api/pushes`;
 
   const MAX_NOTIFICATIONS_COUNT = 50;
 
-  let evtSource;
-
+  let evtSource: EventSource | null = null;
   let notificationsMap = new SvelteMap<string, NotificationPayload>();
 
   let activeId = $state<string | null>(null);
@@ -21,7 +23,6 @@
     return list.sort((a, b) => b.postTime - a.postTime);
   });
 
-  // Get current index for Arrow navigation
   let activeIndex = $derived(
     activeId
       ? sortedNotifications.findIndex((item) => item.id === activeId)
@@ -33,9 +34,7 @@
       const res = await fetch(`${API_BASE}`);
       if (res.ok) {
         const data: NotificationPayload[] = await res.json();
-        
         notificationsMap.clear();
-        // Exclude duplicated items
         data.forEach((item) => notificationsMap.set(item.id, item));
       }
     } catch (err) {
@@ -59,16 +58,12 @@
             activeId = nextActiveId;
             focusActiveCard();
           }
-
-          // Remove from UI
           notificationsMap.delete(msg.id);
         }
         return;
       }
 
       const newNotify: NotificationPayload = msg;
-
-      // Instantly UI update
       notificationsMap.set(newNotify.id, newNotify);
 
       if (notificationsMap.size > MAX_NOTIFICATIONS_COUNT) {
@@ -149,7 +144,6 @@
           }
         }
 
-        // instant remove from UI for smoothness
         notificationsMap.delete(idToDelete);
         activeId = nextActiveId;
         focusActiveCard();
@@ -159,7 +153,10 @@
             method: "DELETE",
           });
           if (!res.ok) {
-            console.error("Failed to delete notification on server \"%s\"", idToDelete);
+            console.error(
+              'Failed to delete notification on server "%s"',
+              idToDelete,
+            );
           }
         } catch (err) {
           console.error("Error sending delete request:", err);
@@ -167,37 +164,46 @@
       }
     }
   }
+
+  let userCount = $state(4);
+  let batteryLevel = $state(73);
+  let isWifiConnected = $state(false);
+  let wifiName = $state("Airport_Free_Wi-Fi");
+  let signalStrength: "low" | "medium" | "high" | "none" = $state("medium");
+  let cellularOperator = $state("t2");
+  let isBluetoothOn = $state(false);
+  let isVpnActive = $state(false);
+  let isMediaPlaying = $state(false);
 </script>
 
 <svelte:window onkeydown={handleKeyDown} />
 
 <main>
+  <ControlPanel 
+    {userCount}
+    {batteryLevel}
+    {isWifiConnected}
+    {wifiName}
+    {signalStrength}
+    {cellularOperator}
+    {isBluetoothOn}
+    {isVpnActive}
+    notificationCount={notificationsMap.size}
+    {isMediaPlaying}
+  />
+
   <h2>Android Notifications Stream</h2>
+
   <div class="logs" bind:this={logsContainer}>
-    <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_tabindex -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
     {#each sortedNotifications as item (item.id)}
-      <div
-        class="card {item.isOngoing ? 'ongoing' : ''} {item.id === activeId
-          ? 'active'
-          : ''}"
-        tabindex="0"
+      <NotificationCard
+        {item}
+        isActive={item.id === activeId}
         onclick={() => {
           activeId = item.id;
           focusActiveCard();
         }}
-      >
-        <div class="header-row">
-          <span class="app-name">{item.appName || "Android App"}</span>
-          <span class="package-name">({item.packageName})</span>
-        </div>
-        <div class="title">{item.title || "Без заголовка"}</div>
-        {#if item.subText}
-          <div class="sub-text">{item.subText}</div>
-        {/if}
-        <div class="content">{item.bigText || item.text || ""}</div>
-        <div class="time">{new Date(item.postTime).toLocaleString()}</div>
-      </div>
+      />
     {:else}
       <p class="empty">There is no notifications yet...</p>
     {/each}
@@ -205,75 +211,34 @@
 </main>
 
 <style>
-  .logs {
-    padding: 10px;
-  }
-  .card {
-    background: white;
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    border-left: 4px solid #007acc;
-    position: relative;
-    outline: none;
-    transition:
-      transform 0.1s,
-      box-shadow 0.1s;
-  }
-  .card.active,
-  .card:focus {
-    box-shadow:
-      0 0 0 2px #007acc,
-      0 4px 8px rgba(0, 0, 0, 0.1);
-    transform: translateX(4px);
-  }
-  .card.ongoing {
-    border-left-color: #ff9800;
-  }
-  .card.ongoing.active,
-  .card.ongoing:focus {
-    box-shadow:
-      0 0 0 2px #ff9800,
-      0 4px 8px rgba(0, 0, 0, 0.1);
+  main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: #f5f7fb;
   }
 
-  .header-row {
-    display: flex;
-    gap: 5px;
-    align-items: center;
-    font-size: 0.8em;
+  h2 {
+    font-family: sans-serif;
+    color: #333;
+    margin-bottom: 15px;
   }
-  .app-name {
-    font-weight: bold;
-    color: #007acc;
+
+  .logs {
+    width: 100%;
+    max-width: 675px;
+    box-sizing: border-box;
   }
-  .package-name {
+
+  .empty {
+    text-align: center;
     color: #888;
-    font-family: monospace;
-  }
-  .title {
-    font-weight: bold;
-    color: #222;
-    margin-top: 5px;
-  }
-  .sub-text {
-    font-size: 0.9em;
-    color: #666;
     font-style: italic;
-    margin-top: 2px;
-  }
-  .content {
-    color: #444;
-    margin-top: 5px;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-  }
-  .time {
-    font-size: 0.75em;
-    color: #aaa;
-    position: absolute;
-    top: 15px;
-    right: 15px;
+    font-family: sans-serif;
   }
 </style>
