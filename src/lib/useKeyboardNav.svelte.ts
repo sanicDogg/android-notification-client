@@ -29,30 +29,23 @@ export function createKeyboardNav(
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
-        activeId =
-          notifications[
-            activeIndex < notifications.length - 1
-              ? activeIndex + 1
-              : 0
-          ].id;
+        activeId = notifications[
+          activeIndex < notifications.length - 1 ? activeIndex + 1 : 0
+        ].id;
         focusActiveCard();
         break;
       case 'ArrowUp':
         event.preventDefault();
-        activeId =
-          notifications[
-            activeIndex > 0
-              ? activeIndex - 1
-              : notifications.length - 1
-          ].id;
+        activeId = notifications[
+          activeIndex > 0 ? activeIndex - 1 : notifications.length - 1
+        ].id;
         focusActiveCard();
         break;
       case 'PageDown':
         event.preventDefault();
-        activeId =
-          notifications[
-            Math.min(activeIndex + PAGE_STEP, notifications.length - 1)
-          ].id;
+        activeId = notifications[
+          Math.min(activeIndex + PAGE_STEP, notifications.length - 1)
+        ].id;
         focusActiveCard();
         break;
       case 'PageUp':

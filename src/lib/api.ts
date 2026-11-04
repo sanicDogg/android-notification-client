@@ -1,5 +1,5 @@
-import { SvelteMap } from "svelte/reactivity";
-import type { ClientInfo, NotificationPayload } from "../db/schema";
+import { SvelteMap } from 'svelte/reactivity';
+import type { ClientInfo, NotificationPayload } from '../db/schema';
 
 /**
  * Universal helper for SvelteMap sync with API data
@@ -12,8 +12,8 @@ export async function syncMapFromApi<T, R, K extends keyof T = keyof T>(
   url: string,
   map: SvelteMap<T[K], T>,
   extractList: (data: R) => T[],
-  errorLabel = "API",
-  key: K = 'id' as unknown as K
+  errorLabel = 'API',
+  key: K = 'id' as unknown as K,
 ) {
   try {
     const res = await fetch(url);
@@ -35,28 +35,28 @@ export async function syncMapFromApi<T, R, K extends keyof T = keyof T>(
   }
 }
 export interface ClientConnectedEvent {
-  type: "CLIENT_CONNECTED";
+  type: 'CLIENT_CONNECTED';
   client: ClientInfo;
 }
 
 export interface ClientDisconnectedEvent {
-  type: "CLIENT_DISCONNECTED";
+  type: 'CLIENT_DISCONNECTED';
   clientId: string;
 }
 
 export interface NotificationDeletedEvent {
-  type: "DELETED";
+  type: 'DELETED';
   id: string;
 }
 
 export interface WelcomeEvent {
-  type: "WELCOME";
+  type: 'WELCOME';
   YourId: string;
 }
 
-export type SseMessage = 
-  | ClientConnectedEvent 
-  | ClientDisconnectedEvent 
-  | NotificationDeletedEvent 
+export type SseMessage =
+  | ClientConnectedEvent
+  | ClientDisconnectedEvent
+  | NotificationDeletedEvent
   | WelcomeEvent
   | NotificationPayload;
