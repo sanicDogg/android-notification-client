@@ -44,7 +44,29 @@
 
     evtSource = new EventSource(`${API_BASE}/events`);
     evtSource.onmessage = (event) => {
-      const newNotify: NotificationPayload = JSON.parse(event.data);
+      const msg = JSON.parse(event.data);
+      if (msg.type === "DELETED") {
+        if (notificationsMap.has(msg.id)) {
+          if (activeId === msg.id) {
+            let nextActiveId: string | null = null;
+            if (sortedNotifications.length > 1) {
+              if (activeIndex < sortedNotifications.length - 1) {
+                nextActiveId = sortedNotifications[activeIndex + 1].id;
+              } else {
+                nextActiveId = sortedNotifications[activeIndex - 1].id;
+              }
+            }
+            activeId = nextActiveId;
+            focusActiveCard();
+          }
+
+          // Remove from UI
+          notificationsMap.delete(msg.id);
+        }
+        return;
+      }
+
+      const newNotify: NotificationPayload = msg;
 
       // Instantly UI update
       notificationsMap.set(newNotify.id, newNotify);
@@ -75,7 +97,7 @@
     }
   }
 
-  function handleKeyDown(event: KeyboardEvent) {
+  async function handleKeyDown(event: KeyboardEvent) {
     if (sortedNotifications.length === 0) return;
 
     const PAGE_STEP = 5;
@@ -116,8 +138,9 @@
     } else if (event.key === "Delete" || event.key === "Backspace") {
       if (activeId && notificationsMap.has(activeId)) {
         event.preventDefault();
-
+        const idToDelete = activeId;
         let nextActiveId: string | null = null;
+
         if (sortedNotifications.length > 1) {
           if (activeIndex < sortedNotifications.length - 1) {
             nextActiveId = sortedNotifications[activeIndex + 1].id;
@@ -126,10 +149,21 @@
           }
         }
 
-        notificationsMap.delete(activeId);
+        // instant remove from UI for smoothness
+        notificationsMap.delete(idToDelete);
         activeId = nextActiveId;
-
         focusActiveCard();
+
+        try {
+          const res = await fetch(`${API_BASE}/${idToDelete}`, {
+            method: "DELETE",
+          });
+          if (!res.ok) {
+            console.error("Failed to delete notification on server \"%s\"", idToDelete);
+          }
+        } catch (err) {
+          console.error("Error sending delete request:", err);
+        }
       }
     }
   }
@@ -233,6 +267,7 @@
     color: #444;
     margin-top: 5px;
     white-space: pre-wrap;
+    word-wrap: break-word;
   }
   .time {
     font-size: 0.75em;
