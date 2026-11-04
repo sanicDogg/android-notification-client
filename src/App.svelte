@@ -8,8 +8,10 @@
 
   const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
   const BASE_PATH = import.meta.env.VITE_BASE_PATH || "/abc/";
-  const API_BASE = `${SERVER_URL}/${BASE_PATH}/api/pushes`;
-
+  
+  const relativePath = `${BASE_PATH}/api/pushes`.replace(/\/+/g, '/');
+  const API_BASE = new URL(relativePath, SERVER_URL).toString();
+  
   const MAX_NOTIFICATIONS_COUNT = 50;
 
   let evtSource: EventSource | null = null;
