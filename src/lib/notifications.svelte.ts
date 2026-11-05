@@ -13,6 +13,13 @@ import type {
   NotificationPayload,
 } from '../db/schema';
 
+const API_PATHS = {
+  base: (apiBase: string) => apiBase,
+  connections: (apiBase: string) => `${apiBase}/connections`,
+  events: (apiBase: string) => `${apiBase}/events`,
+  deleteNotification: (apiBase: string, id: string) => `${apiBase}/${id}`,
+} as const;
+
 export class NotificationService {
   #apiBase: string;
   #evtSource: EventSource | null = null;
@@ -44,7 +51,7 @@ export class NotificationService {
   async #syncClients() {
     try {
       await syncMapFromApi(
-        `${this.#apiBase}/connections`,
+        API_PATHS.connections(this.#apiBase),
         this.clientsMap,
         (data: ClientsPayload) => data.clients,
         'active connections',
@@ -57,7 +64,7 @@ export class NotificationService {
   async init() {
     await Promise.all([
       syncMapFromApi(
-        this.#apiBase,
+        API_PATHS.base(this.#apiBase),
         this.notificationsMap,
         (data: NotificationPayload[]) => data,
         'notifications',
@@ -65,7 +72,7 @@ export class NotificationService {
       this.#syncClients(),
     ]);
 
-    this.#evtSource = new EventSource(`${this.#apiBase}/events`);
+    this.#evtSource = new EventSource(API_PATHS.events(this.#apiBase));
     this.#evtSource.addEventListener('message', this.#onSseMessage.bind(this));
     this.#evtSource.onerror = (err) =>
       console.error('Error in SSE connection:', err);
@@ -88,7 +95,7 @@ export class NotificationService {
   async deleteNotification(id: string) {
     this.notificationsMap.delete(id);
     try {
-      const res = await fetch(`${this.#apiBase}/${id}`, {
+      const res = await fetch(API_PATHS.deleteNotification(this.#apiBase, id), {
         method: 'DELETE',
       });
       if (!res.ok) console.error('Failed to delete on server "%s"', id);
