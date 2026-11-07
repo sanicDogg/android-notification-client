@@ -13,6 +13,8 @@
     isVpnActive?: boolean | null;
     notificationCount?: number;
     isMediaPlaying?: boolean | null;
+    isCharging?: boolean | null;
+    isAirplaneMode?: boolean | null;
   }
 
   let {
@@ -28,6 +30,8 @@
     isVpnActive = false,
     notificationCount = 0,
     isMediaPlaying = false,
+    isCharging = false,
+    isAirplaneMode = false,
   }: Props = $props();
 
   let isUsersDropdownOpen = $state(false);
@@ -190,6 +194,25 @@
 
   <!-- RIGHT SIDE: networks, statuses, battery -->
   <div class="panel-section right">
+    <div
+      class="status-item airplane {isAirplaneMode ? 'active' : ''}"
+      title="Airplane mode: {isAirplaneMode ? 'On' : 'Off'}"
+    >
+      <svg
+        class="airplane-icon-svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path
+          d="M17.8 19.2 16 11l3.5-3.5A2.1 2.1 0 1 0 16.5 4L13 7.5 4.8 5.7 3 7.5l9.1 3.9L8 15.6l-2.8-.8L4 16.2l3.5 1.4 1.4 3.5 1.4-1.2-.8-2.8 4.2-4.1 3.9 9.1z"
+        />
+      </svg>
+    </div>
+
     <!-- VPN -->
     <div
       class="status-item vpn {isVpnActive ? 'active' : ''}"
@@ -235,17 +258,22 @@
       {/if}
     </div>
 
-    <!-- Cellular -->
-    <div class="status-item network" title="Network signal: {cellularOperator}">
-      {#if signalStrength !== "none"}
-        <span class="operator-name">{cellularOperator}</span>
-      {/if}
-      <span class="signal-dots {signalStrength}">
-        <span class="dot d1"></span>
-        <span class="dot d2"></span>
-        <span class="dot d3"></span>
-      </span>
-    </div>
+    {#if !isAirplaneMode}
+      <!-- Cellular -->
+      <div
+        class="status-item network"
+        title="Network signal: {cellularOperator}"
+      >
+        {#if signalStrength !== "none"}
+          <span class="operator-name">{cellularOperator}</span>
+        {/if}
+        <span class="signal-dots {signalStrength}">
+          <span class="dot d1"></span>
+          <span class="dot d2"></span>
+          <span class="dot d3"></span>
+        </span>
+      </div>
+    {/if}
 
     <!-- Wi-Fi -->
     <div
@@ -272,9 +300,22 @@
     </div>
 
     <!-- Battery -->
-    <div class="status-item battery" title="Battery level">
-      <span class="battery-icon {batteryLevel <= 20 ? 'low' : ''}">
-        <span class="battery-level" style="width: {batteryLevel}%"></span>
+    <div
+      class="status-item battery"
+      title="Battery level: {batteryLevel}% {isCharging ? '(Charging)' : ''}"
+    >
+      <span
+        class="battery-icon {batteryLevel <= 20 && !isCharging ? 'low' : ''}"
+      >
+        <span
+          class="battery-level {isCharging ? 'charging' : ''}"
+          style="width: {batteryLevel}%"
+        ></span>
+        {#if isCharging}
+          <svg class="charging-bolt" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+          </svg>
+        {/if}
       </span>
       <span class="value">{batteryLevel}%</span>
     </div>
@@ -349,7 +390,7 @@
   .status-item.users.clickable.active .users-icon-svg {
     color: #007acc;
   }
-   .clients-list {
+  .clients-list {
     list-style: none;
     padding: 0;
     margin: 0;
@@ -389,7 +430,7 @@
     margin-top: 3px;
   }
 
-   /* Dropdown */
+  /* Dropdown */
   .users-dropdown {
     position: absolute;
     top: calc(100% + 8px);
@@ -517,6 +558,21 @@
     100% {
       height: 100%;
     }
+  }
+
+  /* Airplane Mode */
+  .airplane {
+    display: none;
+    transition: all 0.3s ease;
+  }
+  .airplane.active {
+    display: flex;
+    color: #ff9800;
+  }
+  .airplane-icon-svg {
+    width: 15px;
+    height: 15px;
+    display: block;
   }
 
   /* VPN */
@@ -662,6 +718,19 @@
     background: #4caf50;
     border-radius: 1px;
     transition: width 0.3s ease;
+  }
+  .battery-level.charging {
+    background: #2196f3;
+  }
+  .charging-bolt {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 9px;
+    height: 9px;
+    color: #ffeb3b;
+    filter: drop-shadow(0px 0px 1px rgba(0, 0, 0, 0.5));
   }
   .battery-icon.low .battery-level {
     background: #f44336;

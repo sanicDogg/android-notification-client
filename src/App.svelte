@@ -48,6 +48,8 @@
     bluetoothName={deviceState?.bluetoothName}
     isVpnActive={deviceState?.isVpnActive}
     isMediaPlaying={deviceState?.isMediaPlaying}
+    isAirplaneMode={deviceState?.isAirplaneModeOn}
+    isCharging={deviceState?.isCharging}
   />
 
   <h2>Android Notifications Stream</h2>

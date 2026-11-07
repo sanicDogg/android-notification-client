@@ -38,6 +38,7 @@ export interface DevicePayload {
  signalStrength?: "low" | "medium" | "high" | "none" | null;
  cellularOperator?: string | null;
  isAirplaneModeOn?: boolean | null;
+ isCharging?: boolean | null;
  isBluetoothOn?: boolean | null;
  bluetoothName?: string | null;
  isVpnActive?: boolean | null;
