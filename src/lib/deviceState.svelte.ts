@@ -1,6 +1,7 @@
 // src/lib/device-state.svelte.ts
 
 import { SvelteMap } from 'svelte/reactivity';
+import { BaseSseService } from './baseService';
 import { syncMapFromApi } from './api';
 import { DEVICE_ID } from '../const.ts';
 import type { SseMessage } from './api';
@@ -10,16 +11,7 @@ const API_PATHS = {
   base: (apiBase: string) => `${apiBase}/device-state`,
 } as const;
 
-function createApiBaseUrl(): string {
-  const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000';
-  const basePath = import.meta.env.VITE_BASE_PATH || '/abc/';
-  const relativePath = `${basePath}/api`.replace(/\/+/g, '/');
-  return new URL(relativePath, serverUrl).toString();
-}
-
-export class DeviceStateService {
-  #apiBase = createApiBaseUrl();
-
+export class DeviceStateService extends BaseSseService {
   devicesMap = new SvelteMap<string, DevicePayload>();
 
   get currentDevice() {
@@ -32,7 +24,7 @@ export class DeviceStateService {
 
   async init() {
     await syncMapFromApi(
-      API_PATHS.base(this.#apiBase),
+      API_PATHS.base(this.apiBase),
       this.devicesMap,
       (data: DevicePayload[]) => data,
       'device states',
@@ -47,6 +39,4 @@ export class DeviceStateService {
       this.devicesMap.set(DEVICE_ID, updatedDevice);
     }
   }
-
-  destroy() {}
 }

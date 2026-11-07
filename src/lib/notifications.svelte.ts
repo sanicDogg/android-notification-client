@@ -1,6 +1,7 @@
 // src/lib/notifications.svelte.ts
 
 import { SvelteMap } from 'svelte/reactivity';
+import { BaseSseService } from './baseService';
 import { syncMapFromApi } from './api';
 import type {
   ClientConnectedEvent,
@@ -20,15 +21,7 @@ const API_PATHS = {
   connections: (apiBase: string) => `${apiBase}/events/connections`,
 } as const;
 
-function createApiBaseUrl(): string {
-  const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000';
-  const basePath = import.meta.env.VITE_BASE_PATH || '/abc/';
-  const relativePath = `${basePath}/api`.replace(/\/+/g, '/');
-  return new URL(relativePath, serverUrl).toString();
-}
-
-export class NotificationService {
-  #apiBase = createApiBaseUrl();
+export class NotificationService extends BaseSseService {
   #maxCount = 50;
 
   notificationsMap = new SvelteMap<string, NotificationPayload>();
@@ -49,7 +42,7 @@ export class NotificationService {
   async #syncClients() {
     try {
       await syncMapFromApi(
-        API_PATHS.connections(this.#apiBase),
+        API_PATHS.connections(this.apiBase),
         this.clientsMap,
         (data: ClientsPayload) => data.clients,
         'active connections',
@@ -62,7 +55,7 @@ export class NotificationService {
   async init() {
     await Promise.all([
       syncMapFromApi(
-        API_PATHS.base(this.#apiBase),
+        API_PATHS.base(this.apiBase),
         this.notificationsMap,
         (data: NotificationPayload[]) => data,
         'notifications',
@@ -74,7 +67,7 @@ export class NotificationService {
   async deleteNotification(id: string) {
     this.notificationsMap.delete(id);
     try {
-      const res = await fetch(API_PATHS.deleteNotification(this.#apiBase, id), {
+      const res = await fetch(API_PATHS.deleteNotification(this.apiBase, id), {
         method: 'DELETE',
       });
       if (!res.ok) console.error('Failed to delete on server "%s"', id);
@@ -121,6 +114,4 @@ export class NotificationService {
         // TODO: handleNotificationDeletion(msg.id);
     }
   }
-
-  destroy() {}
 }
