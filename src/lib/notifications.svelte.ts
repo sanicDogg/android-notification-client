@@ -95,7 +95,7 @@ export class NotificationService {
   handleSseMessage(msg: SseMessage) {
     if (!msg || typeof msg !== 'object') return;
 
-    if (!('type' in msg) || msg.type === 'NOTIFICATION') {
+    if (!('type' in msg) || msg.type === 'NOTIF') {
       const newNotify = msg as NotificationPayload;
       this.notificationsMap.set(newNotify.id, newNotify);
       this.#limitNotifications(newNotify.id);
