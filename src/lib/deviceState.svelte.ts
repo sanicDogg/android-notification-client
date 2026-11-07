@@ -42,7 +42,7 @@ export class DeviceStateService {
   handleSseMessage(msg: SseMessage) {
     if (!msg || typeof msg !== 'object') return;
 
-    if (!('type' in msg) || msg.type === 'DEVICE_UPDATED') {
+    if (!('type' in msg) || msg.type === 'DEVICE_STATE') {
       const updatedDevice = msg as unknown as DevicePayload;
       this.devicesMap.set(DEVICE_ID, updatedDevice);
     }
