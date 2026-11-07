@@ -26,7 +26,12 @@ export class DeviceStateService extends BaseSseService {
     await syncMapFromApi(
       API_PATHS.base(this.apiBase),
       this.devicesMap,
-      (data: DevicePayload[]) => data,
+      (data: DevicePayload) => {
+        if (data) {
+          return [{ ...data, id: DEVICE_ID }];
+        }
+        return [];
+      },
       'device states',
     );
   }

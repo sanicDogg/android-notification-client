@@ -7,14 +7,12 @@
   import { SseManager } from "./lib/sseManager.svelte";
   import { createKeyboardNav } from "./lib/useKeyboardNav.svelte";
 
-  import { DEVICE_ID } from "./const";
-
   const notificationService = new NotificationService();
   const deviceService = new DeviceStateService();
 
   const sseManager = new SseManager(notificationService, deviceService);
 
-  const deviceState = $derived(deviceService.devicesMap.get(DEVICE_ID));
+  const deviceState = $derived(deviceService.currentDevice);
 
   const nav = createKeyboardNav(
     () => notificationService.sortedNotifications,
