@@ -14,15 +14,21 @@ import type {
 } from '../db/schema';
 
 const API_PATHS = {
-  base: (apiBase: string) => apiBase,
-  connections: (apiBase: string) => `${apiBase}/connections`,
-  events: (apiBase: string) => `${apiBase}/events`,
-  deleteNotification: (apiBase: string, id: string) => `${apiBase}/${id}`,
+  base: (apiBase: string) => `${apiBase}/pushes`,
+  deleteNotification: (apiBase: string, id: string) =>
+    `${apiBase}/pushes/${id}`,
+  connections: (apiBase: string) => `${apiBase}/events/connections`,
 } as const;
 
+function createApiBaseUrl(): string {
+  const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000';
+  const basePath = import.meta.env.VITE_BASE_PATH || '/abc/';
+  const relativePath = `${basePath}/api`.replace(/\/+/g, '/');
+  return new URL(relativePath, serverUrl).toString();
+}
+
 export class NotificationService {
-  #apiBase: string;
-  #evtSource: EventSource | null = null;
+  #apiBase = createApiBaseUrl();
   #maxCount = 50;
 
   notificationsMap = new SvelteMap<string, NotificationPayload>();
@@ -38,14 +44,6 @@ export class NotificationService {
   get sortedNotifications() {
     return Array.from(this.notificationsMap.values())
       .sort((a, b) => b.postTime - a.postTime);
-  }
-
-  constructor() {
-    const serverUrl = import.meta.env.VITE_SERVER_URL ||
-      'http://localhost:3000';
-    const basePath = import.meta.env.VITE_BASE_PATH || '/abc/';
-    const relativePath = `${basePath}/api/pushes`.replace(/\/+/g, '/');
-    this.#apiBase = new URL(relativePath, serverUrl).toString();
   }
 
   async #syncClients() {
@@ -71,25 +69,6 @@ export class NotificationService {
       ),
       this.#syncClients(),
     ]);
-
-    this.#evtSource = new EventSource(API_PATHS.events(this.#apiBase));
-    this.#evtSource.addEventListener('message', this.#onSseMessage.bind(this));
-    this.#evtSource.onerror = (err) =>
-      console.error('Error in SSE connection:', err);
-  }
-
-  #onSseMessage(event: MessageEvent) {
-    console.debug('Raw SSE Event received:', event.data);
-    try {
-      const data = JSON.parse(event.data);
-      this.#handleSseMessage(data);
-    } catch (e) {
-      console.error('Failed to parse SSE JSON:', e);
-    }
-  }
-
-  destroy() {
-    this.#evtSource?.close();
   }
 
   async deleteNotification(id: string) {
@@ -113,7 +92,7 @@ export class NotificationService {
     }
   }
 
-  #handleSseMessage(msg: SseMessage) {
+  handleSseMessage(msg: SseMessage) {
     if (!msg || typeof msg !== 'object') return;
 
     if (!('type' in msg) || msg.type === 'NOTIFICATION') {
@@ -139,8 +118,9 @@ export class NotificationService {
         this.#syncClients();
         break;
       case 'DELETED':
-        // handleNotificationDeletion(msg.id);
-        break;
+        // TODO: handleNotificationDeletion(msg.id);
     }
   }
+
+  destroy() {}
 }

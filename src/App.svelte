@@ -1,24 +1,36 @@
-<script lang="ts">
-  import { onMount, onDestroy } from "svelte";
+<script>
   import ControlPanel from "./components/ControlPanel.svelte";
   import NotificationCard from "./components/NotificationCard.svelte";
 
   import { NotificationService } from "./lib/notifications.svelte";
+  import { DeviceStateService } from "./lib/deviceState.svelte";
+  import { SseManager } from "./lib/sseManager.svelte";
   import { createKeyboardNav } from "./lib/useKeyboardNav.svelte";
-  import { deviceState } from "./lib/deviceState.svelte";
 
-  const service = new NotificationService();
+  import { DEVICE_ID } from "./const";
+
+  const notificationService = new NotificationService();
+  const deviceService = new DeviceStateService();
+
+  const sseManager = new SseManager(notificationService, deviceService);
+
+  const deviceState = $derived(deviceService.devicesMap.get(DEVICE_ID));
+
   const nav = createKeyboardNav(
-    () => service.sortedNotifications,
-    (id) => service.deleteNotification(id),
+    () => notificationService.sortedNotifications,
+    (id) => notificationService.deleteNotification(id),
   );
 
-  onMount(() => {
-    service.init();
-  });
+  $effect(() => {
+    Promise.all([notificationService.init(), deviceService.init()]).then(() => {
+      sseManager.init();
+    });
 
-  onDestroy(() => {
-    service.destroy();
+    return () => {
+      sseManager.destroy();
+      notificationService.destroy();
+      deviceService.destroy();
+    };
   });
 </script>
 
@@ -26,23 +38,23 @@
 
 <main>
   <ControlPanel
-    userCount={service.userCount}
-    clients={Array.from(service.clientsMap.values())}
-    notificationCount={service.count}
-    batteryLevel={deviceState.batteryLevel}
-    isWifiConnected={deviceState.isWifiConnected}
-    wifiName={deviceState.wifiName}
-    signalStrength={deviceState.signalStrength}
-    cellularOperator={deviceState.cellularOperator}
-    isBluetoothOn={deviceState.isBluetoothOn}
-    isVpnActive={deviceState.isVpnActive}
-    isMediaPlaying={deviceState.isMediaPlaying}
+    userCount={notificationService.userCount}
+    clients={Array.from(notificationService.clientsMap.values())}
+    notificationCount={notificationService.count}
+    batteryLevel={deviceState?.batteryLevel}
+    isWifiConnected={deviceState?.isWifiConnected}
+    wifiName={deviceState?.wifiName}
+    signalStrength={deviceState?.signalStrength}
+    cellularOperator={deviceState?.cellularOperator}
+    isBluetoothOn={deviceState?.isBluetoothOn}
+    isVpnActive={deviceState?.isVpnActive}
+    isMediaPlaying={deviceState?.isMediaPlaying}
   />
 
   <h2>Android Notifications Stream</h2>
 
   <div class="logs" bind:this={nav.container}>
-    {#each service.sortedNotifications as item (item.id)}
+    {#each notificationService.sortedNotifications as item (item.id)}
       <NotificationCard
         {item}
         isActive={item.id === nav.activeId}

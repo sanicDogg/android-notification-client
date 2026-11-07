@@ -5,14 +5,14 @@
     clients?: ClientInfo[];
     batteryLevel?: number;
     isWifiConnected?: boolean;
-    wifiName?: string;
-    signalStrength?: "low" | "medium" | "high" | "none";
-    cellularOperator?: string;
-    isBluetoothOn?: boolean;
-    bluetoothName?: string;
-    isVpnActive?: boolean;
+    wifiName?: string | null;
+    signalStrength?: "low" | "medium" | "high" | "none" | null;
+    cellularOperator?: string | null;
+    isBluetoothOn?: boolean | null;
+    bluetoothName?: string | null;
+    isVpnActive?: boolean | null;
     notificationCount?: number;
-    isMediaPlaying?: boolean;
+    isMediaPlaying?: boolean | null;
   }
 
   let {
