@@ -340,7 +340,7 @@
       Helvetica, Arial, sans-serif;
     color: #444;
 
-    margin-bottom: 20px;
+    margin-bottom: 10px;
   }
   .panel-section {
     display: flex;
