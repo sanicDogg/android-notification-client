@@ -3,7 +3,7 @@
 import { SvelteMap } from 'svelte/reactivity';
 import { BaseSseService } from './baseService';
 import { syncMapFromApi } from './api';
-import { DEVICE_ID } from '../const.ts';
+import { DEVICE_ID } from '../const';
 import type { SseMessage } from './api';
 import type { DevicePayload } from '../db/schema';
 
