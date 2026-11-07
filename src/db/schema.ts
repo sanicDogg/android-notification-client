@@ -39,6 +39,7 @@ export interface DevicePayload {
  cellularOperator?: string | null;
  isAirplaneModeOn?: boolean | null;
  isBluetoothOn?: boolean | null;
+ bluetoothName?: string | null;
  isVpnActive?: boolean | null;
  isMediaPlaying?: boolean | null;
  isHeadphonesConnected?: boolean | null;

@@ -45,6 +45,7 @@
     signalStrength={deviceState?.signalStrength}
     cellularOperator={deviceState?.cellularOperator}
     isBluetoothOn={deviceState?.isBluetoothOn}
+    bluetoothName={deviceState?.bluetoothName}
     isVpnActive={deviceState?.isVpnActive}
     isMediaPlaying={deviceState?.isMediaPlaying}
   />
