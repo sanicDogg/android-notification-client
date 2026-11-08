@@ -3,22 +3,33 @@
   import TabMenu from "./components/TabMenu.svelte";
   import NotificationsView from "./pages/NotificationsView.svelte";
   import ClipboardView from "./pages/ClipboardView.svelte";
+  import FileManagerView from "./pages/FileManagerView.svelte";
 
   import { NotificationService } from "./lib/notifications.svelte";
   import { DeviceStateService } from "./lib/deviceState.svelte";
+  import { FileStorageService } from "./lib/fileStorage.svelte";
   import { SseManager } from "./lib/sseManager.svelte";
 
   const notificationService = new NotificationService();
   const deviceService = new DeviceStateService();
+  const fileStorage = new FileStorageService();
 
-  const sseManager = new SseManager(notificationService, deviceService);
+  const sseManager = new SseManager([
+    notificationService, 
+    deviceService, 
+    fileStorage
+  ]);
 
   const deviceState = $derived(deviceService.currentDevice);
 
   let currentPage = $state("notifications");
 
   $effect(() => {
-    Promise.all([notificationService.init(), deviceService.init()]).then(() => {
+    Promise.all([
+      notificationService.init(), 
+      deviceService.init(),
+      fileStorage.init()
+    ]).then(() => {
       sseManager.init();
     });
 
@@ -26,8 +37,13 @@
       sseManager.destroy();
       notificationService.destroy();
       deviceService.destroy();
+      fileStorage.destroy();
     };
   });
+
+  function handleFilesDropped(files) {
+    fileStorage.uploadFiles(files);
+  }
 </script>
 
 <main>
@@ -48,16 +64,21 @@
     isCharging={deviceState?.isCharging}
   />
 
-  <TabMenu
-    bind:value={currentPage}
-  />
+  <TabMenu bind:value={currentPage} />
 
   {#if currentPage === "notifications"}
     <NotificationsView {notificationService} />
-  {:else}
+  {:else if currentPage === "clipboard"}
     <ClipboardView
       text={deviceState?.clipboardText}
       capturedAt={deviceState?.clipboardCapturedAt}
+    />
+  {:else if currentPage === "files"}
+    <FileManagerView
+      files={fileStorage.filesList}
+      isUploading={fileStorage.isUploading}
+      uploadError={fileStorage.uploadError}
+      onFilesDropped={handleFilesDropped}
     />
   {/if}
 </main>

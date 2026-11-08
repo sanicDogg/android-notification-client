@@ -3,7 +3,11 @@
 
   function handleKeyDown(event) {
     const target = event.target;
-    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+    if (
+      target.tagName === "INPUT" ||
+      target.tagName === "TEXTAREA" ||
+      target.isContentEditable
+    ) {
       return;
     }
 
@@ -11,6 +15,8 @@
       value = "notifications";
     } else if (event.key === "2") {
       value = "clipboard";
+    } else if (event.key === "3") {
+      value = "files";
     }
   }
 </script>
@@ -29,6 +35,12 @@
     onclick={() => (value = "clipboard")}
   >
     Clipboard <span class="hotkey">2</span>
+  </button>
+  <button 
+    class:active={value === "files"}
+    onclick={() => (value = "files")}
+  >
+    Files <span class="hotkey">3</span>
   </button>
 </nav>
 

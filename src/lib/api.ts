@@ -54,9 +54,37 @@ export interface WelcomeEvent {
   YourId: string;
 }
 
+export interface DeviceFile {
+  id: string;
+  name: string;
+  size: number;
+  mimeType: string;
+  uploadedAt: string;
+  url: string;
+}
+
+export interface FileAddedEvent {
+  type: 'FILE_ADDED';
+  file: DeviceFile;
+}
+
+export interface FileDeletedEvent {
+  type: 'FILE_DELETED';
+  fileId: string;
+}
+
+export interface FileListUpdatedEvent {
+  type: 'FILE_LIST_UPDATED';
+  files: DeviceFile[];
+}
+
 export type SseMessage =
   | ClientConnectedEvent
   | ClientDisconnectedEvent
   | NotificationDeletedEvent
   | WelcomeEvent
-  | NotificationPayload;
+  | NotificationPayload
+  | FileAddedEvent
+  | FileDeletedEvent
+  | FileListUpdatedEvent;
+  
