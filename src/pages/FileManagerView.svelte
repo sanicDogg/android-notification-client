@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { DeviceFile } from "../lib/api";
+  import { createApiBaseUrl } from "../lib/baseService";
 
   interface Props {
     files?: DeviceFile[];
@@ -16,6 +17,8 @@
   }: Props = $props();
 
   let isDragOver = $state<boolean>(false);
+
+  const apiBase = createApiBaseUrl();
 
   function handleDragOver(e: DragEvent) {
     e.preventDefault();
@@ -49,6 +52,10 @@
         onFilesDropped(selectedFiles);
       }
     }
+  }
+
+  function downloadFile(fileId: string) {
+    window.open(`${apiBase}/shared/download/${fileId}`, "_blank");
   }
 
   function formatBytes(bytes: number, decimals = 2): string {
@@ -123,7 +130,7 @@
 
   {#if uploadError}
     <div class="error-message">
-      <p>Error: {uploadError}</p>
+      <p>{uploadError}</p>
     </div>
   {/if}
 
@@ -159,7 +166,12 @@
               <span class="file-name" title={file.name}>{file.name}</span>
               <span class="file-size">{formatBytes(file.size)}</span>
             </div>
-            <button class="download-btn" aria-label="Download">
+
+            <button
+              class="download-btn"
+              aria-label="Download"
+              onclick={() => downloadFile(file.id)}
+            >
               <svg
                 xmlns="http://w3.org"
                 width="18"
