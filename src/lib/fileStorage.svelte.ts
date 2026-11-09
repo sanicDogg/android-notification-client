@@ -89,12 +89,6 @@ export class FileStorageService extends BaseSseService {
       const result = await response.json();
       console.log('Successfully sent files:', result);
 
-      if (result.files && Array.isArray(result.files)) {
-        this.filesMap.clear();
-        result.files.forEach((file: DeviceFile) =>
-          this.filesMap.set(file.id, file)
-        );
-      }
     } catch (error: unknown) {
       console.error('Error uploading files:', error);
       this.uploadError = String(error);
