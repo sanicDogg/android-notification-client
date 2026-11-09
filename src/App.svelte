@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import ControlPanel from "./components/ControlPanel.svelte";
   import TabMenu from "./components/TabMenu.svelte";
   import NotificationsView from "./pages/NotificationsView.svelte";
@@ -9,26 +9,27 @@
   import { DeviceStateService } from "./lib/deviceState.svelte";
   import { FileStorageService } from "./lib/fileStorage.svelte";
   import { SseManager } from "./lib/sseManager.svelte";
+  import { AppStateService } from "./lib/appState.svelte";
 
   const notificationService = new NotificationService();
   const deviceService = new DeviceStateService();
   const fileStorage = new FileStorageService();
 
+  const appState = new AppStateService();
+
   const sseManager = new SseManager([
-    notificationService, 
-    deviceService, 
-    fileStorage
+    notificationService,
+    deviceService,
+    fileStorage,
   ]);
 
   const deviceState = $derived(deviceService.currentDevice);
 
-  let currentPage = $state("notifications");
-
   $effect(() => {
     Promise.all([
-      notificationService.init(), 
+      notificationService.init(),
       deviceService.init(),
-      fileStorage.init()
+      fileStorage.init(),
     ]).then(() => {
       sseManager.init();
     });
@@ -41,7 +42,7 @@
     };
   });
 
-  function handleFilesDropped(files) {
+  function handleFilesDropped(files: File[]) {
     fileStorage.uploadFiles(files);
   }
 </script>
@@ -64,16 +65,16 @@
     isCharging={deviceState?.isCharging}
   />
 
-  <TabMenu bind:value={currentPage} />
+  <TabMenu bind:value={appState.currentPage} />
 
-  {#if currentPage === "notifications"}
+  {#if appState.currentPage === "notifications"}
     <NotificationsView {notificationService} />
-  {:else if currentPage === "clipboard"}
+  {:else if appState.currentPage === "clipboard"}
     <ClipboardView
       text={deviceState?.clipboardText}
       capturedAt={deviceState?.clipboardCapturedAt}
     />
-  {:else if currentPage === "files"}
+  {:else if appState.currentPage === "files"}
     <FileManagerView
       files={fileStorage.filesList}
       isUploading={fileStorage.isUploading}

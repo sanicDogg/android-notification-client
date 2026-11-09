@@ -1,5 +1,9 @@
-<script>
-  let { value = $bindable() } = $props();
+<script lang="ts">
+  import type { AppPage } from "../lib/appState.svelte";
+  interface Props {
+    value?: AppPage;
+  }
+  let { value = $bindable() }: Props = $props();
 
   function handleKeyDown(event) {
     const target = event.target;
@@ -36,10 +40,7 @@
   >
     Clipboard <span class="hotkey">2</span>
   </button>
-  <button 
-    class:active={value === "files"}
-    onclick={() => (value = "files")}
-  >
+  <button class:active={value === "files"} onclick={() => (value = "files")}>
     Files <span class="hotkey">3</span>
   </button>
 </nav>
