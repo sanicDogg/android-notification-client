@@ -2,7 +2,7 @@
 
 import { SvelteMap } from 'svelte/reactivity';
 import { BaseSseService } from './baseService';
-import { syncMapFromApi } from './api';
+import { deleteFromMapAndApi, syncMapFromApi } from './api';
 import type {
   ClientConnectedEvent,
   ClientDisconnectedEvent,
@@ -65,15 +65,12 @@ export class NotificationService extends BaseSseService {
   }
 
   async deleteNotification(id: string) {
-    this.notificationsMap.delete(id);
-    try {
-      const res = await fetch(API_PATHS.deleteNotification(this.apiBase, id), {
-        method: 'DELETE',
-      });
-      if (!res.ok) console.error('Failed to delete on server "%s"', id);
-    } catch (err) {
-      console.error('Error sending delete request:', err);
-    }
+    await deleteFromMapAndApi(
+      API_PATHS.deleteNotification(this.apiBase, id),
+      this.notificationsMap,
+      id,
+      'notification',
+    );
   }
 
   #limitNotifications(newNotifyId: string) {

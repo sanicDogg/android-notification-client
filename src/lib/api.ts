@@ -34,6 +34,34 @@ export async function syncMapFromApi<T, R, K extends keyof T = keyof T>(
     console.error(`Error loading ${errorLabel}:`, err);
   }
 }
+
+/**
+ * Universal helper removing from SvelteMap and from server
+ */
+export async function deleteFromMapAndApi<K, V>(
+  url: string,
+  map: SvelteMap<K, V>,
+  id: K,
+  errorLabel = 'item',
+): Promise<boolean> {
+  const backup = map.get(id);
+  map.delete(id);
+
+  try {
+    const res = await fetch(url, { method: 'DELETE' });
+    if (!res.ok) {
+      console.error(`Failed to delete ${errorLabel} on server "%s"`, id);
+      if (backup !== undefined) map.set(id, backup);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error(`Error sending delete request for ${errorLabel}:`, err);
+    if (backup !== undefined) map.set(id, backup);
+    return false;
+  }
+}
+
 export interface ClientConnectedEvent {
   type: 'CLIENT_CONNECTED';
   client: ClientInfo;
@@ -78,6 +106,18 @@ export interface FileListUpdatedEvent {
   files: DeviceFile[];
 }
 
+export interface ClipboardEntry {
+  id: number;
+  deviceId: string;
+  text: string;
+  capturedAt: number;
+}
+
+export interface ClipboardUpdatedEvent {
+  type: 'CLIPBOARD_UPDATED';
+  data: ClipboardEntry;
+}
+
 export type SseMessage =
   | ClientConnectedEvent
   | ClientDisconnectedEvent
@@ -86,5 +126,5 @@ export type SseMessage =
   | NotificationPayload
   | FileAddedEvent
   | FileDeletedEvent
-  | FileListUpdatedEvent;
-  
+  | FileListUpdatedEvent
+  | ClipboardUpdatedEvent;
