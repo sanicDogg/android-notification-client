@@ -118,6 +118,16 @@ export interface ClipboardUpdatedEvent {
   data: ClipboardEntry;
 }
 
+export interface ClipboardItemDeletedEvent {
+  type: 'CLIPBOARD_ITEM_DELETED';
+  id: number;
+}
+
+export interface ClipboardAllClearedEvent {
+  type: 'CLIPBOARD_ALL_CLEARED';
+  deviceId: string;
+}
+
 export type SseMessage =
   | ClientConnectedEvent
   | ClientDisconnectedEvent
@@ -127,4 +137,6 @@ export type SseMessage =
   | FileAddedEvent
   | FileDeletedEvent
   | FileListUpdatedEvent
-  | ClipboardUpdatedEvent;
+  | ClipboardUpdatedEvent
+  | ClipboardItemDeletedEvent
+  | ClipboardAllClearedEvent;

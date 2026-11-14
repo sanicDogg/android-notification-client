@@ -73,6 +73,9 @@
     <ClipboardView
       text={deviceState?.clipboardText}
       capturedAt={deviceState?.clipboardCapturedAt}
+      history={deviceService.clipboardHistory}
+      onDeleteItem={(id) => deviceService.deleteClipboardItem(id)}
+      onClearAll={() => deviceService.clearAllClipboard()}
     />
   {:else if appState.currentPage === "files"}
     <FileManagerView
