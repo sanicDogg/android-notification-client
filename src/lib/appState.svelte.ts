@@ -1,5 +1,6 @@
 // src/lib/appState.svelte.ts
-export type AppPage = 'notifications' | 'clipboard' | 'files';
+const APP_PAGES = ['notifications', 'clipboard', 'files'] as const;
+export type AppPage = (typeof APP_PAGES)[number];
 
 export class AppStateService {
   private _currentPage = $state<AppPage>('notifications');
@@ -16,7 +17,11 @@ export class AppStateService {
       'notifications',
       this.isValidPage,
     );
-    this._sseEnabled = this.load(this.SSE_STORAGE_KEY, true);
+    this._sseEnabled = this.load(
+      this.SSE_STORAGE_KEY,
+      true,
+      (val): val is boolean => typeof val === 'boolean',
+    );
   }
 
   get currentPage(): AppPage {
@@ -48,7 +53,7 @@ export class AppStateService {
     if (raw === null) return fallback;
 
     try {
-      const parsed = JSON.parse(raw);
+      const parsed: unknown = JSON.parse(raw);
       return !validate || validate(parsed) ? (parsed as T) : fallback;
     } catch {
       return fallback;
@@ -61,7 +66,10 @@ export class AppStateService {
     }
   }
 
-  private isValidPage(page: string): page is AppPage {
-    return ['notifications', 'clipboard', 'files'].includes(page);
+  private isValidPage(val: unknown): val is AppPage {
+    return (
+      typeof val === 'string' &&
+      (APP_PAGES as readonly string[]).includes(val)
+    );
   }
 }
