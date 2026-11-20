@@ -17,11 +17,10 @@
 
   const appState = new AppStateService();
 
-  const sseManager = new SseManager([
-    notificationService,
-    deviceService,
-    fileStorage,
-  ]);
+  const sseManager = new SseManager(
+    [notificationService, deviceService, fileStorage],
+    appState,
+  );
 
   const deviceState = $derived(deviceService.currentDevice);
 
@@ -42,6 +41,12 @@
     };
   });
 
+  $effect(() => {
+    if (!appState.sseEnabled) {
+      notificationService.clearClients();
+    }
+  });
+
   function handleFilesDropped(files: File[]) {
     fileStorage.uploadFiles(files);
   }
@@ -49,6 +54,7 @@
 
 <main>
   <ControlPanel
+    bind:isSseEnabled={appState.sseEnabled}
     userCount={notificationService.userCount}
     clients={Array.from(notificationService.clientsMap.values())}
     notificationCount={notificationService.count}

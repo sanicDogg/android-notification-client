@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { ClientInfo } from "../db/schema";
   interface Props {
+    isSseEnabled?: boolean;
     userCount?: number;
     clients?: ClientInfo[];
     batteryLevel?: number;
@@ -18,6 +19,7 @@
   }
 
   let {
+    isSseEnabled = $bindable(true),
     userCount = 0,
     clients = [],
     batteryLevel = 100,
@@ -162,6 +164,20 @@
         </div>
       {/if}
     </div>
+
+    <!-- SSE Live Toggle -->
+    <button
+      type="button"
+      class="status-item sse-toggle {isSseEnabled ? 'active' : ''}"
+      title={isSseEnabled
+        ? "Live updates: On"
+        : "Live updates: Paused"}
+      onclick={() => (isSseEnabled = !isSseEnabled)}
+    >
+      <span class="sse-dot"></span>
+      <span class="text">Live</span>
+    </button>
+
     {#if notificationCount > 0}
       <div class="status-item notifications" title="Notifications">
         <!-- bell svg -->
@@ -369,6 +385,43 @@
     color: #222;
     font-weight: 600;
     padding-left: 1px;
+  }
+
+  /* SSE Live Toggle */
+  .sse-toggle {
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    color: #888;
+    background: #f0f0f0;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  .sse-toggle:hover {
+    background: #e5e5ea;
+    color: #444;
+  }
+  .sse-toggle.active {
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-weight: 600;
+  }
+  .sse-toggle.active:hover {
+    background: #dcf0de;
+  }
+
+  .sse-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #9e9e9e;
+    transition: background-color 0.2s ease;
+  }
+  .sse-toggle.active .sse-dot {
+    background: #4caf50;
   }
 
   /* Clients */

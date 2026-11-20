@@ -34,6 +34,10 @@ export class NotificationService extends BaseSseService {
     return this.notificationsMap.size;
   }
 
+  clearClients() {
+    this.clientsMap.clear();
+  }
+
   get sortedNotifications() {
     return Array.from(this.notificationsMap.values())
       .sort((a, b) => b.postTime - a.postTime);
