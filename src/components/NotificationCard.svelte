@@ -66,14 +66,21 @@
     gap: 5px;
     align-items: center;
     font-size: 0.8em;
+    padding-right: 120px;
+    min-width: 0;
   }
   .app-name {
     font-weight: bold;
     color: #007acc;
+    flex-shrink: 0;
   }
   .package-name {
     color: #888;
     font-family: monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
   }
   .title {
     font-weight: bold;
