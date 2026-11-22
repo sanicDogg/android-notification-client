@@ -60,6 +60,14 @@
     window.open(`${apiBase}/shared/download/${fileId}`, "_blank");
   }
 
+  function openRawFile(fileId: string) {
+    window.open(
+      `${apiBase}/shared/download/${fileId}?inline=true`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  }
+
   function formatBytes(bytes: number, decimals = 2): string {
     if (!bytes) return "0 Bytes";
     const k = 1024;
@@ -187,6 +195,28 @@
             </div>
 
             <div class="file-actions">
+              <button
+                class="action-btn raw-btn"
+                aria-label="Open Raw"
+                title="Open Raw"
+                onclick={() => openRawFile(file.id)}
+              >
+                <svg
+                  xmlns="http://w3.org"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+
               <button
                 class="action-btn download-btn"
                 aria-label="Download"
@@ -449,6 +479,11 @@
     transition:
       background-color 0.2s,
       color 0.2s;
+  }
+
+  .raw-btn:hover {
+    background-color: #e2e8f0;
+    color: #4a90e2;
   }
 
   .download-btn:hover {
