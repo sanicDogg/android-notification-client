@@ -324,7 +324,7 @@
         />
       </svg>
       <span class="wifi-info">
-        {isWifiConnected ? wifiName : "Offline"}
+        {isWifiConnected ? wifiName : ""}
       </span>
     </div>
 
