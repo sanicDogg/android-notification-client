@@ -40,8 +40,6 @@
     isAirplaneMode = false,
   }: Props = $props();
 
-  isCellularConnected = true;
-
   let isUsersDropdownOpen = $state(false);
   let isCopied = $state(false);
 
@@ -813,5 +811,42 @@
   }
   .battery-icon.low .battery-level {
     background: #f44336;
+  }
+
+  /* Mobile / Small Width Devices */
+  @media (max-width: 600px) {
+    .control-panel {
+      padding: 10px 12px;
+    }
+
+    .panel-section {
+      gap: 10px;
+    }
+
+    /* Drop text labels */
+    .sse-toggle .text,
+    .vpn .text,
+    .bluetooth-info,
+    .wifi-info,
+    .battery .value {
+      display: none;
+    }
+
+    /* Hide VPN completely when inactive */
+    .vpn:not(.active) {
+      display: none;
+    }
+
+    /* Adjust pill padding so icon-only buttons look balanced */
+    .sse-toggle,
+    .vpn.active {
+      padding: 5px;
+    }
+
+    /* Keep dropdown within viewport */
+    .users-dropdown {
+      width: calc(100vw - 32px);
+      max-width: 290px;
+    }
   }
 </style>
