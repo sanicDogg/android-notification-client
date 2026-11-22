@@ -7,8 +7,10 @@
     batteryLevel?: number;
     isWifiConnected?: boolean;
     wifiName?: string | null;
+    isCellularConnected?: boolean;
     signalStrength?: "low" | "medium" | "high" | "none" | null;
     cellularOperator?: string | null;
+    cellularTech?: string | null;
     isBluetoothOn?: boolean | null;
     bluetoothName?: string | null;
     isVpnActive?: boolean | null;
@@ -25,8 +27,10 @@
     batteryLevel = 100,
     isWifiConnected = true,
     wifiName = "Home_Network",
+    isCellularConnected = false,
     signalStrength = "high",
     cellularOperator = "",
+    cellularTech = "3G",
     isBluetoothOn = false,
     bluetoothName = "",
     isVpnActive = false,
@@ -35,6 +39,8 @@
     isCharging = false,
     isAirplaneMode = false,
   }: Props = $props();
+
+  isCellularConnected = true;
 
   let isUsersDropdownOpen = $state(false);
   let isCopied = $state(false);
@@ -169,9 +175,7 @@
     <button
       type="button"
       class="status-item sse-toggle {isSseEnabled ? 'active' : ''}"
-      title={isSseEnabled
-        ? "Live updates: On"
-        : "Live updates: Paused"}
+      title={isSseEnabled ? "Live updates: On" : "Live updates: Paused"}
       onclick={() => (isSseEnabled = !isSseEnabled)}
     >
       <span class="sse-dot"></span>
@@ -278,15 +282,24 @@
       <!-- Cellular -->
       <div
         class="status-item network"
-        title="Network signal: {cellularOperator}"
+        title="Cellular: {cellularOperator || 'Unknown'}{cellularTech
+          ? ` (${cellularTech})`
+          : ''} · Mobile data: {isCellularConnected ? 'On' : 'Off'}"
       >
-        {#if signalStrength !== "none"}
+        {#if cellularOperator}
           <span class="operator-name">{cellularOperator}</span>
         {/if}
-        <span class="signal-dots {signalStrength}">
-          <span class="dot d1"></span>
-          <span class="dot d2"></span>
-          <span class="dot d3"></span>
+
+        <span class="signal-group">
+          {#if cellularTech && isCellularConnected}
+            <span class="cellular-tech">{cellularTech}</span>
+          {/if}
+
+          <span class="signal-dots {signalStrength}">
+            <span class="dot d1"></span>
+            <span class="dot d2"></span>
+            <span class="dot d3"></span>
+          </span>
         </span>
       </div>
     {/if}
@@ -682,6 +695,19 @@
   .operator-name {
     font-size: 0.8rem;
     color: #777;
+  }
+  .signal-group {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 3px;
+  }
+  .cellular-tech {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    color: #007acc;
+    line-height: 1;
+    user-select: none;
   }
   .signal-dots {
     display: flex;

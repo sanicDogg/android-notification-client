@@ -61,6 +61,8 @@
     batteryLevel={deviceState?.batteryLevel}
     isWifiConnected={deviceState?.isWifiConnected}
     wifiName={deviceState?.wifiName}
+    isCellularConnected={deviceState?.isCellularConnected ?? false}
+    cellularTech={deviceState?.cellularTechnology}
     signalStrength={deviceState?.signalStrength}
     cellularOperator={deviceState?.cellularOperator}
     isBluetoothOn={deviceState?.isBluetoothOn}

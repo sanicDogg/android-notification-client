@@ -35,6 +35,7 @@ export interface DevicePayload {
  type?: string | null;
  wifiName?: string | null;
  isCellularConnected?: boolean | null;
+ cellularTechnology?: string | null;
  signalStrength?: "low" | "medium" | "high" | "none" | null;
  cellularOperator?: string | null;
  isAirplaneModeOn?: boolean | null;
