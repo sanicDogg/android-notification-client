@@ -14,6 +14,7 @@ import type {
 const API_PATHS = {
   upload: (apiBase: string) => `${apiBase}/shared/upload`,
   list: (apiBase: string) => `${apiBase}/shared/list`,
+  delete: (apiBase: string, fileId: string) => `${apiBase}/shared/${fileId}`,
 } as const;
 
 export class FileStorageService extends BaseSseService {
@@ -88,12 +89,32 @@ export class FileStorageService extends BaseSseService {
 
       const result = await response.json();
       console.log('Successfully sent files:', result);
-
     } catch (error: unknown) {
       console.error('Error uploading files:', error);
       this.uploadError = String(error);
     } finally {
       this.isUploading = false;
+    }
+  }
+
+  async deleteFile(fileId: string): Promise<void> {
+    if (!fileId) return;
+
+    try {
+      const deleteUrl = API_PATHS.delete(this.apiBase, fileId);
+
+      const response = await fetch(deleteUrl, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.statusText}`);
+      }
+      
+      this.filesMap.delete(fileId);
+    } catch (error: unknown) {
+      console.error('Error deleting file:', error);
+      this.uploadError = `Failed to delete file: ${String(error)}`;
     }
   }
 

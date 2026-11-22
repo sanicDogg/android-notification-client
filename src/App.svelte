@@ -91,6 +91,7 @@
       isUploading={fileStorage.isUploading}
       uploadError={fileStorage.uploadError}
       onFilesDropped={handleFilesDropped}
+      onDeleteFile={(id) => fileStorage.deleteFile(id)}
     />
   {/if}
 </main>

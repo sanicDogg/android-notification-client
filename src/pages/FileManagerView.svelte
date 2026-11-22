@@ -7,6 +7,7 @@
     isUploading?: boolean;
     uploadError?: string | null;
     onFilesDropped?: (files: File[]) => void;
+    onDeleteFile?: (fileId: string) => void;
   }
 
   let {
@@ -14,6 +15,7 @@
     isUploading = false,
     uploadError = null,
     onFilesDropped,
+    onDeleteFile,
   }: Props = $props();
 
   let isDragOver = $state<boolean>(false);
@@ -163,6 +165,7 @@
         {#each files as file (file.id || file.name)}
           <div class="file-card">
             <div class="file-icon">
+              <!-- SVG File Icon -->
               <svg
                 xmlns="http://w3.org"
                 width="24"
@@ -183,26 +186,63 @@
               <span class="file-size">{formatBytes(file.size)}</span>
             </div>
 
-            <button
-              class="download-btn"
-              aria-label="Download"
-              onclick={() => downloadFile(file.id)}
-            >
-              <svg
-                xmlns="http://w3.org"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                ><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline
-                  points="7 10 12 15 17 10"
-                /><line x1="12" y1="15" x2="12" y2="3" /></svg
+            <div class="file-actions">
+              <button
+                class="action-btn download-btn"
+                aria-label="Download"
+                title="Download"
+                onclick={() => downloadFile(file.id)}
               >
-            </button>
+                <svg
+                  xmlns="http://w3.org"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  ><path
+                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                  /><polyline points="7 10 12 15 17 10" /><line
+                    x1="12"
+                    y1="15"
+                    x2="12"
+                    y2="3"
+                  /></svg
+                >
+              </button>
+
+              {#if onDeleteFile}
+                <button
+                  class="action-btn delete-btn"
+                  aria-label="Delete"
+                  title="Delete"
+                  onclick={() => onDeleteFile(file.id)}
+                >
+                  <svg
+                    xmlns="http://w3.org"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    ><polyline points="3 6 5 6 21 6" /><path
+                      d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                    /><line x1="10" y1="11" x2="10" y2="17" /><line
+                      x1="14"
+                      y1="11"
+                      x2="14"
+                      y2="17"
+                    /></svg
+                  >
+                </button>
+              {/if}
+            </div>
           </div>
         {/each}
       </div>
@@ -390,7 +430,13 @@
     margin-top: 2px;
   }
 
-  .download-btn {
+  .file-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .action-btn {
     background: none;
     border: none;
     color: #718096;
@@ -408,5 +454,10 @@
   .download-btn:hover {
     background-color: #e2e8f0;
     color: #2d3748;
+  }
+
+  .delete-btn:hover {
+    background-color: #fee2e2;
+    color: #ef4444;
   }
 </style>
