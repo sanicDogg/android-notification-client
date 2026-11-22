@@ -129,8 +129,24 @@
   </div>
 
   {#if uploadError}
-    <div class="error-message">
-      <p>{uploadError}</p>
+    <div class="error-message" role="alert">
+      <svg
+        class="error-icon"
+        xmlns="http://w3.org"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <p class="error-text">{uploadError}</p>
     </div>
   {/if}
 
@@ -209,13 +225,39 @@
   }
 
   .error-message {
-    color: #dc2626;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #b91c1c;
     background-color: #fef2f2;
-    padding: 10px 16px;
-    border-radius: 6px;
-    margin-top: 12px;
+    border: 1px solid #fecaca;
+    border-left: 4px solid #ef4444;
+    padding: 12px 16px;
+    margin-top: 16px;
     font-size: 14px;
-    border: 1px solid #fee2e2;
+    line-height: 1.4;
+    animation: slideDown 0.2s ease-out;
+  }
+
+  .error-icon {
+    flex-shrink: 0;
+    color: #ef4444;
+  }
+
+  .error-text {
+    margin: 0;
+    font-weight: 500;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .file-manager-container {
